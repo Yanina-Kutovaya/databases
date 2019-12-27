@@ -1,10 +1,10 @@
--- Создаём БД
+--- РЎРѕР·РґР°С‘Рј Р‘Р”
 CREATE DATABASE vk;
 
--- Делаем её текущей
+-- Р”РµР»Р°РµРј РµС‘ С‚РµРєСѓС‰РµР№
 USE vk;
 
--- Создаём таблицу пользователей
+-- РЎРѕР·РґР°С‘Рј С‚Р°Р±Р»РёС†Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
 CREATE TABLE users (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,  
   first_name VARCHAR(100) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE users (
   updated_at DATETIME DEFAULT NOW() ON UPDATE NOW()
 );
 
--- Таблица профилей
+-- РўР°Р±Р»РёС†Р° РїСЂРѕС„РёР»РµР№
 CREATE TABLE profiles (
   user_id INT UNSIGNED NOT NULL PRIMARY KEY,
   sex CHAR(1) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE profiles (
   photo_id INT UNSIGNED NOT NULL
 );
 
--- Таблица сообщений
+-- РўР°Р±Р»РёС†Р° СЃРѕРѕР±С‰РµРЅРёР№
 CREATE TABLE messages (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, 
   from_user_id INT UNSIGNED NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE messages (
   created_at DATETIME DEFAULT NOW()
 );
 
--- Таблица дружбы
+-- РўР°Р±Р»РёС†Р° РґСЂСѓР¶Р±С‹
 CREATE TABLE friendship (
   user_id INT UNSIGNED NOT NULL,
   friend_id INT UNSIGNED NOT NULL,
@@ -45,27 +45,27 @@ CREATE TABLE friendship (
   PRIMARY KEY (user_id, friend_id)
 );
 
--- Таблица статусов дружеских отношений
+-- РўР°Р±Р»РёС†Р° СЃС‚Р°С‚СѓСЃРѕРІ РґСЂСѓР¶РµСЃРєРёС… РѕС‚РЅРѕС€РµРЅРёР№
 CREATE TABLE friendship_statuses (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL UNIQUE
 );
 
 
--- Таблица групп
+-- РўР°Р±Р»РёС†Р° РіСЂСѓРїРї
 CREATE TABLE communities (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL UNIQUE
 );
 
--- Таблица связи пользователей и групп
+-- РўР°Р±Р»РёС†Р° СЃРІСЏР·Рё РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ Рё РіСЂСѓРїРї
 CREATE TABLE communities_users (
   community_id INT UNSIGNED NOT NULL,
   user_id INT UNSIGNED NOT NULL,
   PRIMARY KEY (community_id, user_id)
 );
 
--- Таблица медиафайлов
+-- РўР°Р±Р»РёС†Р° РјРµРґРёР°С„Р°Р№Р»РѕРІ
 CREATE TABLE media (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   media_type_id INT UNSIGNED NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE media (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Таблица типов медиафайлов
+-- РўР°Р±Р»РёС†Р° С‚РёРїРѕРІ РјРµРґРёР°С„Р°Р№Р»РѕРІ
 CREATE TABLE media_types (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE
