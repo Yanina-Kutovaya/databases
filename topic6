@@ -1,0 +1,112 @@
+-- Практическое задание по теме “Операторы, фильтрация, сортировка и ограничение. Агрегация данных”
+
+-- Работаем с БД vk и тестовыми данными, которые сгенерировали ранее:
+USE vk;
+
+-- 1. Проанализировать запросы, которые выполнялись на занятии, определить возможные корректировки и/или улучшения (JOIN пока не применять).
+
+
+-- 1.1 Запрос ниже выдает ошибку:
+
+-- Архив с правильной сортировкой новостей по месяцам 
+SELECT COUNT(id) AS news, 
+  MONTHNAME(created_at) AS month,
+  MONTH(created_at) AS month_num 
+    FROM media
+      WHERE YEAR(created_at) = YEAR(NOW())
+    GROUP BY month_num
+    ORDER BY month_num DESC; 
+   
+-- Ошибка:   
+-- SQL Error [1055] [42000]: 
+-- Expression #2 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'vk.media.created_at'
+-- which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+
+-- 1.2 Информацию лучше запрашивать за предыдущий год (мы в январе 2020, другие месяцы просто не попадут)
+   
+-- Скорректированный вариант: 
+   
+SELECT COUNT(id) AS news, 
+  MONTHNAME(created_at) AS month,
+  MONTH(created_at) AS month_num 
+    FROM media
+      WHERE YEAR(created_at) = YEAR(NOW()) - 1
+    GROUP BY month_num, month
+    ORDER BY month_num DESC, month;  
+   
+  
+-- 2. Пусть задан некоторый пользователь. Из всех друзей этого пользователя найдите человека, который больше всех общался с нашим пользователем.
+
+-- messages: from_user_id, to_user_id (общался - писал нашему пользователю и получал сообщения от нашего пользователя);учитываются только доставленные сообщения - is_delivered
+-- likes (проставление лайков будем считать общением)
+
+
+-- messages
+(SELECT to_user_id AS friend_id, COUNT(id) AS number_of_messages 
+  FROM messages WHERE from_user_id = 4 AND is_delivered = 1
+  GROUP BY to_user_id)
+UNION
+(SELECT from_user_id AS friend_id, COUNT(id) AS number_of_messages 
+  FROM messages WHERE to_user_id = 4 AND is_delivered = 1
+  GROUP BY from_user_id)
+
+
+UNION
+-- likes
+(SELECT target_id AS friend_id, COUNT(id) AS number_of_messages 
+  FROM likes WHERE user_id = 4
+  GROUP BY target_id)
+UNION
+(SELECT user_id AS friend_id, COUNT(id) AS number_of_messages 
+  FROM likes WHERE target_id = 4
+  GROUP BY user_id)  
+ 
+ORDER BY number_of_messages DESC LIMIT 1;
+
+-- Если скорректировать meetings_users и вместо организатора встречи задать регистрацию тех, кто собирается прийти на встречу,
+-- Тогда можно было бы добавить в общение и личные встречи.
+
+
+
+-- 3. Подсчитать общее количество лайков, которые получили 10 самых молодых пользователей.
+
+SELECT COUNT(likes.user_id) AS num_of_likes
+  FROM likes 
+    JOIN (SELECT user_id FROM profiles ORDER BY TIMESTAMPDIFF(YEAR, birthday, NOW()) LIMIT 10) p 
+    ON p.user_id = likes.user_id;
+
+            
+-- 4. Определить кто больше поставил лайков (всего) - мужчины или женщины?
+
+SELECT IF(
+	(SELECT (SELECT COUNT(likes.user_id)
+	  FROM likes 
+	    JOIN (SELECT user_id, sex FROM profiles WHERE sex = 'm') p 
+	    ON p.user_id = likes.user_id) > (SELECT COUNT(likes.user_id) FROM likes) / 2),
+  
+   'men', 'women') AS more_likes;
+   
+   
+-- 5. Найти 10 пользователей, которые проявляют наименьшую активность в использовании социальной сети.
+
+-- Активность пользователя:
+-- messages - рассылает сообщения
+-- likes - ставит лайки
+-- posts - публикует посты
+-- media - выкладывает аудио, фото и видео
+-- meetings_users - организовывает встречи
+
+-- Предположим, что у каждого вида активности одинаковая значимость (=1)
+
+
+SELECT from_user_id AS user_id, COUNT(id) AS number_of_activities FROM messages GROUP BY from_user_id
+UNION
+SELECT user_id, COUNT(id) AS number_of_activities FROM likes GROUP BY user_id
+UNION
+SELECT user_id, COUNT(id) AS number_of_activities FROM posts GROUP BY user_id
+UNION
+SELECT user_id, COUNT(id) AS number_of_activities FROM media GROUP BY user_id
+UNION
+SELECT user_id, COUNT(meeting_id) AS number_of_activities FROM meetings_users GROUP BY user_id
+
+ORDER BY number_of_activities LIMIT 10;
