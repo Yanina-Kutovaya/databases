@@ -87,13 +87,24 @@ SELECT COUNT(likes.user_id) AS num_of_likes
             
 -- 4. Определить кто больше поставил лайков (всего) - мужчины или женщины?
 
+  -- Вариант 1
+SELECT IF(  
+ (SELECT (SELECT COUNT(user_id) 
+   FROM likes
+     WHERE user_id IN (
+       SELECT p.user_id FROM
+         (SELECT user_id FROM profiles WHERE sex = 'm') p
+   ) > (SELECT COUNT(user_id) FROM likes) / 2)),
+  'men', 'women') AS more_likes;
+
+-- Вариант 2
 SELECT IF(
-	(SELECT (SELECT COUNT(likes.user_id)
-	  FROM likes 
-	    JOIN (SELECT user_id, sex FROM profiles WHERE sex = 'm') p 
-	    ON p.user_id = likes.user_id) > (SELECT COUNT(likes.user_id) FROM likes) / 2),
-  
-   'men', 'women') AS more_likes;
+  (SELECT (SELECT COUNT(likes.user_id)
+    FROM likes 
+      JOIN (SELECT user_id, sex FROM profiles WHERE sex = 'm') p 
+        ON p.user_id = likes.user_id
+  ) > (SELECT COUNT(likes.user_id) FROM likes) / 2),  
+    'men', 'women') AS more_likes;
    
    
 -- 5. Найти 10 пользователей, которые проявляют наименьшую активность в использовании социальной сети.
