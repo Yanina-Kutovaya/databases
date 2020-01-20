@@ -35,19 +35,27 @@ SELECT COUNT(id) AS news,
     ORDER BY month_num DESC, month;  
    
   
--- 2. Пусть задан некоторый пользователь. Из всех друзей этого пользователя найдите человека, который больше всех общался с нашим пользователем.
+-- 2. Пусть задан некоторый пользователь. Из всех друзей этого пользователя найдите человека, 
+--    который больше всех общался с нашим пользователем.
 
--- messages: from_user_id, to_user_id (общался - писал нашему пользователю и получал сообщения от нашего пользователя);учитываются только доставленные сообщения - is_delivered
--- likes (проставление лайков будем считать общением)
+-- messages: from_user_id, to_user_id (общался - писал нашему пользователю и получал сообщения от нашего пользователя);
+-- учитываются только доставленные сообщения - is_delivered от друзей friendship status_id = 2
+-- likes (проставление лайков будем считать общением), если лайки от друзей и друзьям - friendship status_id = 2
 
 
 -- messages
 (SELECT to_user_id AS friend_id, COUNT(id) AS number_of_messages 
   FROM messages WHERE from_user_id = 4 AND is_delivered = 1
+    AND to_user_id IN (
+      SELECT friend_id FROM friendship WHERE user_id = 4 AND status_id = 2
+    )
   GROUP BY to_user_id)
 UNION
 (SELECT from_user_id AS friend_id, COUNT(id) AS number_of_messages 
   FROM messages WHERE to_user_id = 4 AND is_delivered = 1
+    AND from_user_id IN (
+      SELECT friend_id FROM friendship WHERE user_id = 4 AND status_id = 2
+    )
   GROUP BY from_user_id)
 
 
@@ -55,10 +63,16 @@ UNION
 -- likes
 (SELECT target_id AS friend_id, COUNT(id) AS number_of_messages 
   FROM likes WHERE user_id = 4
+    AND target_id IN (
+      SELECT friend_id FROM friendship WHERE user_id = 4 AND status_id = 2
+    )
   GROUP BY target_id)
 UNION
 (SELECT user_id AS friend_id, COUNT(id) AS number_of_messages 
   FROM likes WHERE target_id = 4
+    AND user_id IN (
+      SELECT friend_id FROM friendship WHERE user_id = 4 AND status_id = 2
+    )
   GROUP BY user_id)  
  
 ORDER BY number_of_messages DESC LIMIT 1;
