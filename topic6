@@ -85,19 +85,20 @@ ORDER BY number_of_messages DESC LIMIT 1;
 -- 3. Подсчитать общее количество лайков, которые получили 10 самых молодых пользователей.
 
 -- Вариант 1
-SELECT COUNT(user_id) AS num_of_likes 
+SELECT COUNT(target_id) AS num_of_likes 
   FROM likes
-    WHERE user_id IN (  
+    WHERE target_id IN (  
       SELECT p.user_id FROM
         (SELECT user_id FROM profiles ORDER BY TIMESTAMPDIFF(YEAR, birthday, NOW()) LIMIT 10) p
     );
-
+ 
 -- Вариант 2
-SELECT COUNT(likes.user_id) AS num_of_likes
+SELECT COUNT(likes.target_id) AS num_of_likes
   FROM likes 
     JOIN (SELECT user_id FROM profiles ORDER BY TIMESTAMPDIFF(YEAR, birthday, NOW()) LIMIT 10) p 
-    ON p.user_id = likes.user_id;
-
+    ON p.user_id = likes.target_id;
+   
+SELECT * FROM likes;
             
 -- 4. Определить кто больше поставил лайков (всего) - мужчины или женщины?
 
