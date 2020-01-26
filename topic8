@@ -1,0 +1,112 @@
+-- Практическое задание по теме “Сложные запросы”
+
+-- Работаем с БД vk и тестовыми данными, которые вы сгенерировали ранее:
+USE vk;
+
+-- 2. Пусть задан некоторый пользователь. Из всех друзей этого пользователя найдите человека, 
+--    который больше всех общался с нашим пользователем.
+
+-- общался - писал нашему пользователю; messages: from_user_id, to_user_id = 16 
+-- учитываются только доставленные сообщения (is_delivered) от друзей (friendship status - 'confirmed')
+
+   
+SELECT from_user_id, COUNT(DISTINCT m.id) AS number_of_messages FROM messages m
+  JOIN friendship
+    ON to_user_id = 16
+      AND is_delivered = 1
+      AND (to_user_id = user_id OR to_user_id = friend_id)
+  JOIN friendship_statuses fs
+    ON status_id = fs.id 
+      AND name = 'confirmed'  
+  GROUP BY from_user_id
+ORDER BY number_of_messages DESC LIMIT 1; 
+ 
+
+-- 3. Подсчитать общее количество лайков, которые получили 10 самых молодых пользователей.
+
+-- учитываются лайки поставленные:
+-- сообщениям пользователей ('messages' from_user_id)
+-- самим пользователм ('users')
+-- мадиафайлам пользователей ('media')
+-- постам пользователей ('posts')
+
+SELECT SUM(y.num_of_likes) AS likes_to_10_youngest_users 
+  FROM (
+    SELECT x.from_user_id, COUNT(x.id) AS num_of_likes 
+      FROM (
+        (SELECT l.id, m.from_user_id 
+          FROM likes l
+            JOIN messages m 
+              ON l.target_id = m.id
+            JOIN target_types tt
+              ON l.target_type_id = tt.id 
+                AND tt.name = 'messages')
+        UNION 
+          (SELECT l.id, l.target_id
+            FROM likes l
+              JOIN target_types tt
+                ON l.target_type_id = tt.id 
+                  AND tt.name = 'users')
+        UNION       
+          (SELECT l.id, m2.user_id
+            FROM likes l
+              JOIN media m2
+              ON l.target_id = m2.id
+              JOIN target_types tt
+                ON l.target_type_id = tt.id 
+                  AND tt.name = 'media')
+         UNION   
+           (SELECT l.id, p.user_id
+             FROM likes l
+               JOIN posts p
+                 ON l.target_id = p.id
+               JOIN target_types tt
+                 ON l.target_type_id = tt.id 
+                   AND tt.name = 'posts')) x
+           JOIN profiles pr
+             ON pr.user_id = x.from_user_id
+         GROUP BY x.from_user_id
+       ORDER BY pr.birthday DESC LIMIT 10) y;
+
+ 
+ -- 4. Определить кто больше поставил лайков (всего) - мужчины или женщины?
+
+SELECT IF(
+  (SELECT (
+    SELECT COUNT(l.user_id)
+      FROM likes l
+        JOIN profiles p
+          ON p.user_id = l.user_id 
+            AND sex = 'm'
+      ) > (SELECT COUNT(user_id) FROM likes) / 2),  
+    'men', 'women') AS more_likes;
+   
+
+ -- 5. Найти 10 пользователей, которые проявляют наименьшую активность в использовании социальной сети.
+
+-- Активность пользователя:
+-- messages - рассылает сообщения
+-- likes - проставляет лайки
+-- posts - делает посты
+
+SELECT x.user_id 
+  FROM (
+    (SELECT p.user_id, COUNT(m.id) AS num_of_act
+      FROM profiles p
+        LEFT JOIN messages m
+          ON p.user_id = m.from_user_id
+        GROUP BY p.user_id)
+  UNION 
+    (SELECT p.user_id, COUNT(l.id)
+      FROM profiles p
+        LEFT JOIN likes l
+          ON p.user_id = l.user_id 
+        GROUP BY p.user_id)
+   UNION 
+    (SELECT p.user_id, COUNT(p2.id)
+      FROM profiles p
+        LEFT JOIN posts p2
+          ON p.user_id = p2.user_id 
+        GROUP BY p.user_id)
+    ) x
+    ORDER BY x.num_of_act LIMIT 10;
