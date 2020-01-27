@@ -5,19 +5,109 @@ USE vk;
 
 -- Без изменений:
 -- users
--- profiles user_id - первичный ключ
 -- friendship_statuses
 -- media_types
 -- target_types
 -- meetings
 -- communities
+
+
+-- profiles - user_id - первичный ключ
+
+DROP TABLE profiles;
+CREATE TABLE profiles (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED,
+  sex CHAR(1) NOT NULL,
+  birthday DATE,
+  hometown VARCHAR(100),
+  photo_id INT UNSIGNED NOT NULL
+);
+
+ALTER TABLE profiles 
+  ADD CONSTRAINT profiles_user_id_fk
+    FOREIGN KEY (user_id)
+      REFERENCES users(id)
+        ON DELETE SET NULL
+          ON UPDATE CASCADE;
+         
+
+-- friendship - user_id, friend_id - первичные ключи
+
+DROP TABLE friendship;
+CREATE TABLE friendship (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  friend_id INT UNSIGNED NOT NULL,
+  status_id INT UNSIGNED,
+  requested_at DATETIME DEFAULT NOW(),
+  confirmed_at DATETIME  
+);
+        
+ ALTER TABLE friendship
+   ADD CONSTRAINT friendship_user_id_fk
+     FOREIGN KEY (user_id)
+       REFERENCES users(id)
+         ON DELETE CASCADE
+           ON UPDATE CASCADE,
+    ADD CONSTRAINT friendship_friend_id_fk
+      FOREIGN KEY (friend_id)
+        REFERENCES users(id)
+          ON DELETE CASCADE
+            ON UPDATE CASCADE, 
+    ADD CONSTRAINT friendship_status_id_fk
+      FOREIGN KEY (status_id)
+        REFERENCES friendship_statuses(id)
+          ON DELETE SET NULL
+            ON UPDATE CASCADE; 
+
+
+-- meetings_users - meetings_id, user_id - первичные ключи
+
+DROP TABLE meetings_users;
+CREATE TABLE meetings_users (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  meeting_id INT UNSIGNED,
+  user_id INT UNSIGNED,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP  
+);
+
+ALTER TABLE meetings_users 
+  ADD CONSTRAINT meetings_users_user_id_fk
+    FOREIGN KEY (user_id)
+      REFERENCES users(id)
+        ON DELETE SET NULL
+          ON UPDATE CASCADE,    
+   ADD CONSTRAINT meetings_users_meeting_id_fk
+    FOREIGN KEY (meeting_id)
+      REFERENCES meetings(id)
+        ON DELETE SET NULL
+          ON UPDATE CASCADE;
+         
+
 -- communities_users - оба ключа первичные (community_id и user_id)
--- meetings_users - user_id - первичный ключ
+ 
+DROP TABLE communities_users;
+CREATE TABLE communities_users (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  community_id INT UNSIGNED,
+  user_id INT UNSIGNED  
+);
 
-
+ALTER TABLE communities_users 
+  ADD CONSTRAINT communities_users_user_id_fk
+    FOREIGN KEY (user_id)
+      REFERENCES users(id)
+        ON DELETE SET NULL
+          ON UPDATE CASCADE,    
+   ADD CONSTRAINT communities_users_community_id_fk
+    FOREIGN KEY (community_id)
+      REFERENCES communities(id)
+        ON DELETE SET NULL
+          ON UPDATE CASCADE;
+         
+         
 -- posts
-
-UPDATE posts SET media_id = FLOOR(1+RAND()*300); 
 
 ALTER TABLE posts 
   ADD CONSTRAINT posts_user_id_fk
@@ -76,20 +166,6 @@ ALTER TABLE messages
           ON UPDATE CASCADE, 
   ADD CONSTRAINT messages_to_user_id_fk
     FOREIGN KEY (to_user_id)
-      REFERENCES profiles(user_id)
+      REFERENCES users(id)
         ON DELETE SET NULL
           ON UPDATE CASCADE;
-
- 
--- friendship
-
-ALTER TABLE friendship 
-  MODIFY status_id INT UNSIGNED;    
-         
- ALTER TABLE friendship 
-  ADD CONSTRAINT friendship_status_id_fk
-    FOREIGN KEY (status_id)
-      REFERENCES friendship_statuses(id)
-        ON DELETE SET NULL
-          ON UPDATE CASCADE;        
-         
