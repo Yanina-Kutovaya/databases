@@ -14,16 +14,6 @@ USE vk;
 
 -- profiles - user_id - первичный ключ
 
-DROP TABLE profiles;
-CREATE TABLE profiles (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED,
-  sex CHAR(1) NOT NULL,
-  birthday DATE,
-  hometown VARCHAR(100),
-  photo_id INT UNSIGNED NOT NULL
-);
-
 ALTER TABLE profiles 
   ADD CONSTRAINT profiles_user_id_fk
     FOREIGN KEY (user_id)
@@ -33,17 +23,7 @@ ALTER TABLE profiles
          
 
 -- friendship - user_id, friend_id - первичные ключи
-
-DROP TABLE friendship;
-CREATE TABLE friendship (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
-  friend_id INT UNSIGNED NOT NULL,
-  status_id INT UNSIGNED,
-  requested_at DATETIME DEFAULT NOW(),
-  confirmed_at DATETIME  
-);
-        
+      
  ALTER TABLE friendship
    ADD CONSTRAINT friendship_user_id_fk
      FOREIGN KEY (user_id)
@@ -64,14 +44,6 @@ CREATE TABLE friendship (
 
 -- meetings_users - meetings_id, user_id - первичные ключи
 
-DROP TABLE meetings_users;
-CREATE TABLE meetings_users (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  meeting_id INT UNSIGNED,
-  user_id INT UNSIGNED,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP  
-);
-
 ALTER TABLE meetings_users 
   ADD CONSTRAINT meetings_users_user_id_fk
     FOREIGN KEY (user_id)
@@ -87,13 +59,6 @@ ALTER TABLE meetings_users
 
 -- communities_users - оба ключа первичные (community_id и user_id)
  
-DROP TABLE communities_users;
-CREATE TABLE communities_users (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  community_id INT UNSIGNED,
-  user_id INT UNSIGNED  
-);
-
 ALTER TABLE communities_users 
   ADD CONSTRAINT communities_users_user_id_fk
     FOREIGN KEY (user_id)
