@@ -28,19 +28,16 @@ CREATE INDEX media_created_at_idx ON media(created_at);
 --   отношение в процентах 
 --     (общее количество пользователей в группе / всего пользователей в системе) * 100
 
-   
-SET @users_per_group_avg = (
-  SELECT SUM(x.average) / COUNT(x.average) 
+ 
+       
+SELECT DISTINCT communities.name, 
+  (SELECT SUM(x.total_per_group) / COUNT(x.total_per_group) 
     FROM (  
       SELECT DISTINCT COUNT(communities_users.user_id) 
         OVER (PARTITION BY communities_users.community_id) 
-          AS average 
-            FROM communities_users
-      ) x     
-   );
-  
-       
-SELECT DISTINCT communities.name, @users_per_group_avg,  
+          AS total_per_group 
+            FROM communities_users) x)
+      AS avg_per_group,
   FIRST_VALUE (CONCAT(users.first_name, ' ', users.last_name)) 
     OVER (PARTITION BY communities_users.community_id ORDER BY profiles.birthday DESC)
       AS youngest,
