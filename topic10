@@ -1,0 +1,60 @@
+-- Урок 10. Вебинар. Транзакции, переменные, представления. Администрирование.
+--  Хранимые процедуры и функции, триггеры
+
+-- Задания на БД vk:
+USE vk;
+
+-- 1. Проанализировать какие запросы могут выполняться наиболее часто в процессе работы приложения
+--    и добавить необходимые индексы.
+
+CREATE INDEX users_first_name_last_name_idx ON users(first_name, last_name);
+
+CREATE INDEX profiles_birthday_idx ON profiles(birthday);
+
+CREATE INDEX meetings_scheduled_at_idx ON meetings(scheduled_at);
+
+CREATE INDEX media_created_at_idx ON media(created_at);
+
+
+
+-- 2. Задание на оконные функции
+-- Построить запрос, который будет выводить следующие столбцы:
+--   имя группы
+--   среднее количество пользователей в группах
+--   самый молодой пользователь в группе
+--   самый пожилой пользователь в группе
+--   общее количество пользователей в группе
+--   всего пользователей в системе
+--   отношение в процентах 
+--     (общее количество пользователей в группе / всего пользователей в системе) * 100
+
+   
+SET @users_per_group_avg = (
+  SELECT SUM(x.average) / COUNT(x.average) 
+    FROM (  
+      SELECT DISTINCT COUNT(communities_users.user_id) 
+        OVER (PARTITION BY communities_users.community_id) 
+          AS average 
+            FROM communities_users
+      ) x     
+   );
+  
+       
+SELECT DISTINCT communities.name, @users_per_group_avg,  
+  FIRST_VALUE (CONCAT(users.first_name, ' ', users.last_name)) 
+    OVER (PARTITION BY communities_users.community_id ORDER BY profiles.birthday DESC)
+      AS youngest,
+  FIRST_VALUE (CONCAT(users.first_name, ' ', users.last_name)) 
+    OVER (PARTITION BY communities_users.community_id ORDER BY profiles.birthday)
+      AS oldest,
+  COUNT(communities_users.user_id) OVER w AS total_by_group,
+  (SELECT COUNT(id) FROM users) AS total,
+  COUNT(communities_users.user_id) OVER w / (SELECT COUNT(id) FROM users) * 100 AS "%%"
+    FROM communities_users
+      JOIN communities
+        ON communities_users.community_id = communities.id
+      JOIN profiles 
+        ON communities_users.user_id = profiles.user_id
+      JOIN users 
+        ON communities_users.user_id = users.id
+        WINDOW w AS (PARTITION BY communities_users.community_id);
