@@ -28,30 +28,28 @@ CREATE INDEX media_created_at_idx ON media(created_at);
 --   отношение в процентах 
 --     (общее количество пользователей в группе / всего пользователей в системе) * 100
 
- 
-       
+        
 SELECT DISTINCT communities.name, 
-  (SELECT SUM(x.total_per_group) / COUNT(x.total_per_group) 
-    FROM (  
-      SELECT DISTINCT COUNT(communities_users.user_id) 
-        OVER (PARTITION BY communities_users.community_id) 
-          AS total_per_group 
-            FROM communities_users) x)
-      AS avg_per_group,
+  AVG(x.users_per_group) OVER () AS users_per_group_avg,  
   FIRST_VALUE (CONCAT(users.first_name, ' ', users.last_name)) 
     OVER (PARTITION BY communities_users.community_id ORDER BY profiles.birthday DESC)
       AS youngest,
   FIRST_VALUE (CONCAT(users.first_name, ' ', users.last_name)) 
     OVER (PARTITION BY communities_users.community_id ORDER BY profiles.birthday)
       AS oldest,
-  COUNT(communities_users.user_id) OVER w AS total_by_group,
-  (SELECT COUNT(id) FROM users) AS total,
+  COUNT(communities_users.user_id) OVER w AS users_by_group,
+  (SELECT COUNT(id) FROM users) AS total_users,
   COUNT(communities_users.user_id) OVER w / (SELECT COUNT(id) FROM users) * 100 AS "%%"
     FROM communities_users
-      JOIN communities
+      LEFT JOIN communities
         ON communities_users.community_id = communities.id
-      JOIN profiles 
+      LEFT JOIN (
+        SELECT community_id AS id, COUNT(DISTINCT user_id) AS users_per_group
+          FROM communities_users
+          GROUP BY community_id) x
+        ON communities_users.community_id = x.id
+      LEFT JOIN profiles 
         ON communities_users.user_id = profiles.user_id
-      JOIN users 
+      LEFT JOIN users 
         ON communities_users.user_id = users.id
         WINDOW w AS (PARTITION BY communities_users.community_id);
