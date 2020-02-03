@@ -30,7 +30,11 @@ CREATE INDEX media_created_at_idx ON media(created_at);
 
         
 SELECT DISTINCT communities.name, 
-  AVG(x.users_per_group) OVER () AS users_per_group_avg,  
+  (SELECT AVG(x.users_per_group) FROM
+    (SELECT COUNT(DISTINCT user_id) AS users_per_group
+      FROM communities_users
+        GROUP BY community_id) x) 
+      AS users_by_group_avg,   
   FIRST_VALUE (CONCAT(users.first_name, ' ', users.last_name)) 
     OVER (PARTITION BY communities_users.community_id ORDER BY profiles.birthday DESC)
       AS youngest,
@@ -43,13 +47,9 @@ SELECT DISTINCT communities.name,
     FROM communities_users
       LEFT JOIN communities
         ON communities_users.community_id = communities.id
-      LEFT JOIN (
-        SELECT community_id AS id, COUNT(DISTINCT user_id) AS users_per_group
-          FROM communities_users
-          GROUP BY community_id) x
-        ON communities_users.community_id = x.id
       LEFT JOIN profiles 
         ON communities_users.user_id = profiles.user_id
       LEFT JOIN users 
         ON communities_users.user_id = users.id
         WINDOW w AS (PARTITION BY communities_users.community_id);
+        
