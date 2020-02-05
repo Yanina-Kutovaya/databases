@@ -1,0 +1,52 @@
+-- Практическое задание по теме “Оптимизация запросов”
+-- 1.Создайте таблицу logs типа Archive. Пусть при каждом создании записи в таблицах
+--   users, catalogs и products в таблицу logs помещается время и дата создания записи,
+--   название таблицы, идентификатор первичного ключа и содержимое поля name.
+
+USE shop;
+
+DROP TABLE IF EXISTS logs;
+CREATE TABLE logs(
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  tbl_name VARCHAR(255) NOT NULL,
+  tbl_id INT NOT NULL,
+  name VARCHAR(255) NOT NULL
+  ) ENGINE = ARCHIVE;
+ 
+
+DELIMITER -
+ CREATE TRIGGER users_insert
+   AFTER INSERT ON users
+   FOR EACH ROW 
+   BEGIN 
+	   DECLARE user_id INT UNSIGNED;
+	   DECLARE user_name VARCHAR(255);
+	   SELECT id, name INTO user_id, user_name FROM users ORDER BY id DESC LIMIT 1;	   
+	   INSERT INTO logs(tbl_name, tbl_id, name) VALUES
+	   ('users', user_id, user_name);
+   END; -  
+
+  CREATE TRIGGER catalogs_insert
+   AFTER INSERT ON catalogs
+   FOR EACH ROW 
+   BEGIN 
+	   DECLARE catalog_id INT UNSIGNED;
+	   DECLARE catalog_name VARCHAR(255);
+	   SELECT id, name INTO catalog_id, catalog_name FROM catalogs ORDER BY id DESC LIMIT 1;
+	   INSERT INTO logs(tbl_name, tbl_id, name) VALUES
+	     ('catalogs', catalog_id, catalog_name);
+   END; -   
+   
+  CREATE TRIGGER products_insert
+   AFTER INSERT ON products
+   FOR EACH ROW 
+   BEGIN 
+	   DECLARE product_id INT UNSIGNED;
+	   DECLARE product_name VARCHAR(255);
+	   SELECT id, name INTO product_id, product_name FROM products ORDER BY id DESC LIMIT 1;	  
+	   INSERT INTO logs(tbl_name, tbl_id, name) VALUES
+	     ('products', product_id, product_name);
+   END; -     
+  
+DELIMITER ;
