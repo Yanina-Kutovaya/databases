@@ -30,4 +30,3 @@ SELECT * FROM tbl;
 
 
 SELECT created_at, MONTH(created_at) = 8 AS if_exists FROM some_tbl;
-
