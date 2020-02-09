@@ -134,3 +134,4 @@ ALTER TABLE messages
       REFERENCES users(id)
         ON DELETE SET NULL
           ON UPDATE CASCADE;
+
