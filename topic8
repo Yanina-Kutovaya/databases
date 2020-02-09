@@ -110,3 +110,4 @@ SELECT x.user_id
         GROUP BY p.user_id)
     ) x
     ORDER BY x.num_of_act LIMIT 10;
+    
