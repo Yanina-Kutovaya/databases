@@ -16,7 +16,6 @@ CREATE INDEX meetings_scheduled_at_idx ON meetings(scheduled_at);
 CREATE INDEX media_created_at_idx ON media(created_at);
 
 
-
 -- 2. Задание на оконные функции
 -- Построить запрос, который будет выводить следующие столбцы:
 --   имя группы
@@ -51,5 +50,4 @@ SELECT DISTINCT communities.name,
         ON communities_users.user_id = profiles.user_id
       LEFT JOIN users 
         ON communities_users.user_id = users.id
-        WINDOW w AS (PARTITION BY communities_users.community_id);
-        
+        WINDOW w AS (PARTITION BY communities_users.community_id);        
