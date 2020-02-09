@@ -14,6 +14,7 @@ CREATE TABLE logs(
   name VARCHAR(255) NOT NULL
   ) ENGINE = ARCHIVE;
  
+ 
 
 DELIMITER - 
  CREATE TRIGGER users_insert
