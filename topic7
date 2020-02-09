@@ -24,3 +24,5 @@ SELECT t1.id, flight_from, flight_to FROM (
       (SELECT flights.id, name AS flight_to FROM flights JOIN cities ON flight_to = label) t2
         ON t1.id = t2.id)
   ORDER BY t1.id;
+  
+  
