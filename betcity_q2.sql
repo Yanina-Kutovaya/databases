@@ -37,9 +37,7 @@ INSERT INTO employee(id, department_id, chief_id, name, salary) VALUES
 
 
 
-CREATE VIEW management_salary (chief_id, salary) AS
-	SELECT e.id, e.salary FROM employee e
-		WHERE e.id IN (SELECT chief_id from employee);
-
-SELECT 	e.name, d.name FROM employee e, department d, management_salary m
-	WHERE e.chief_id = m.chief_id AND m.salary > 1.5 * e.salary AND e.department_id = d.id;	
+SELECT e.name, d.name FROM employee AS e JOIN employee AS m JOIN department AS d
+	ON e.department_id = d.id AND m.salary > 1.5 * e.salary AND e.chief_id = m.id;
+	
+	
